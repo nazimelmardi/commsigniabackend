@@ -1,11 +1,11 @@
 package com.commsignia.backend.service;
 
 import com.commsignia.backend.domain.DomainService;
-import com.commsignia.backend.domain.entity.FullListDto;
 import com.commsignia.backend.domain.entity.VehicleWithLatestPositionDTO;
 import com.commsignia.backend.service.pojo.ListenerLocation;
 import com.commsignia.backend.service.pojo.ListenerNotification;
 import com.commsignia.backend.service.pojo.ListenerVehicle;
+import com.commsignia.backend.service.pojo.LocationForUIDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -42,13 +42,18 @@ public class ListeningService {
                 listenerVehicleList.add(vehicle);
             }
         }
+
         return listenerVehicleList;
     }
 
     public void newPosition (String id, ListenerLocation location) {
         log.info("new position POST at service level");
         domainService.saveNewPosition(id, location.getLatitude(),location.getLongitude());
-        sendUpdateLocation(location);
+        LocationForUIDto ui = new LocationForUIDto();
+        ui.setId(id);
+        ui.setLongitude(location.getLongitude());
+        ui.setLatitude(location.getLongitude());
+        sendUpdateLocation(ui);
     }
 
     public String newVehicle() {
@@ -77,29 +82,20 @@ public class ListeningService {
         return distance <= rad;
     }
 
-    public Mono<String> createEmployee() {
-        WebClient client = WebClient.create();
-
-        List<FullListDto> dtos = domainService.getLatestList();
-
-        return client.post()
-                .uri("/vehicles/ui")
-                .bodyValue(dtos).retrieve().bodyToMono(String.class);
-    }
 
     public Mono<String> sendNotification(ListenerNotification notification) {
         WebClient client = WebClient.create();
 
         return client.post()
-                .uri("/notificatictions/")
+                .uri("/notificatictions/ui")
                 .bodyValue(notification).retrieve().bodyToMono(String.class);
     }
 
-    public Mono<String> sendUpdateLocation(ListenerLocation location) {
+    public Mono<String> sendUpdateLocation(LocationForUIDto location) {
         WebClient client = WebClient.create();
 
         return client.post()
-                .uri("/notificatictions/")
+                .uri("/vehicles/update")
                 .bodyValue(location).retrieve().bodyToMono(String.class);
     }
 }

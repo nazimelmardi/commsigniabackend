@@ -3,7 +3,7 @@ package com.commsignia.backend.service;
 import com.commsignia.backend.service.pojo.ListenerLocation;
 import com.commsignia.backend.service.pojo.ListenerNotification;
 import com.commsignia.backend.service.pojo.ListenerVehicle;
-import com.commsignia.backend.service.pojo.uiDTO;
+import com.commsignia.backend.service.pojo.LocationForUIDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -62,16 +62,16 @@ public class Controller {
     }
 
     @GetMapping("/vehicle")
-    public ResponseEntity<List<uiDTO>> getVehicleInfo() {
+    public ResponseEntity<List<LocationForUIDto>> getVehicleInfo() {
         // For demonstration, creating a sample uiDTO object with dummy data
-        uiDTO dto = new uiDTO();
+        LocationForUIDto dto = new LocationForUIDto();
         dto.setId("12345");
         dto.setLatitude(47.47581);
         dto.setLongitude(19.05749);
         dto.setNotifications("3 vehicles in range");
-        List<uiDTO> uiDTOList = new ArrayList<>();
-        uiDTOList.add(dto);
-        return ResponseEntity.ok(uiDTOList);
+        List<LocationForUIDto> locationForUIDtoList = new ArrayList<>();
+        locationForUIDtoList.add(dto);
+        return ResponseEntity.ok(locationForUIDtoList);
     }
 
 }
