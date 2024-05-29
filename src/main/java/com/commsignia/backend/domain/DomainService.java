@@ -1,5 +1,6 @@
 package com.commsignia.backend.domain;
 
+import com.commsignia.backend.domain.entity.FullListDto;
 import com.commsignia.backend.domain.entity.Notification;
 import com.commsignia.backend.domain.entity.Position;
 import com.commsignia.backend.domain.entity.Vehicle;
@@ -65,5 +66,9 @@ public class DomainService {
         } else {
             throw new RuntimeException("couldn't find vehicle by id");
         }
+    }
+
+    public List<FullListDto> getLatestList() {
+        return vehicleRepository.findVecihlesWithPositionAndNotification();
     }
 }

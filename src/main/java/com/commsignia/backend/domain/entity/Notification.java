@@ -24,4 +24,8 @@ public class Notification {
 
     @Column(name = "created_at")
     private LocalDateTime created_at;
+
+    @ManyToOne
+    @JoinColumn(name = "vehicle_id", nullable = false)
+    private Vehicle vehicle;
 }

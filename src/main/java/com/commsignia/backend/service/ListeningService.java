@@ -1,6 +1,7 @@
 package com.commsignia.backend.service;
 
 import com.commsignia.backend.domain.DomainService;
+import com.commsignia.backend.domain.entity.FullListDto;
 import com.commsignia.backend.domain.entity.VehicleWithLatestPositionDTO;
 import com.commsignia.backend.service.pojo.ListenerLocation;
 import com.commsignia.backend.service.pojo.ListenerNotification;
@@ -8,6 +9,8 @@ import com.commsignia.backend.service.pojo.ListenerVehicle;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +20,11 @@ public class ListeningService {
 
     private final DomainService domainService;
 
+
+
+
     @Autowired
-    public ListeningService (DomainService domainService) {
+    public ListeningService (DomainService domainService, WebClient webClient) {
         this.domainService = domainService;
     }
 
@@ -42,6 +48,7 @@ public class ListeningService {
     public void newPosition (String id, ListenerLocation location) {
         log.info("new position POST at service level");
         domainService.saveNewPosition(id, location.getLatitude(),location.getLongitude());
+        sendUpdateLocation(location);
     }
 
     public String newVehicle() {
@@ -52,6 +59,7 @@ public class ListeningService {
     public void newNotification(ListenerNotification notification) {
         log.info("new notification POST at service level");
         domainService.createNewNotification(notification);
+        sendNotification(notification);
     }
 
     private boolean isWithinRange(double latitude, double longitude, Double lat, Double lon, Double rad) {
@@ -67,5 +75,31 @@ public class ListeningService {
 
         double distance = earthRadius * c;
         return distance <= rad;
+    }
+
+    public Mono<String> createEmployee() {
+        WebClient client = WebClient.create();
+
+        List<FullListDto> dtos = domainService.getLatestList();
+
+        return client.post()
+                .uri("/vehicles/ui")
+                .bodyValue(dtos).retrieve().bodyToMono(String.class);
+    }
+
+    public Mono<String> sendNotification(ListenerNotification notification) {
+        WebClient client = WebClient.create();
+
+        return client.post()
+                .uri("/notificatictions/")
+                .bodyValue(notification).retrieve().bodyToMono(String.class);
+    }
+
+    public Mono<String> sendUpdateLocation(ListenerLocation location) {
+        WebClient client = WebClient.create();
+
+        return client.post()
+                .uri("/notificatictions/")
+                .bodyValue(location).retrieve().bodyToMono(String.class);
     }
 }
