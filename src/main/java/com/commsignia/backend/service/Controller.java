@@ -3,9 +3,9 @@ package com.commsignia.backend.service;
 import com.commsignia.backend.service.pojo.ListenerLocation;
 import com.commsignia.backend.service.pojo.ListenerNotification;
 import com.commsignia.backend.service.pojo.ListenerVehicle;
-import com.commsignia.backend.service.pojo.LocationForUIDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -61,17 +60,10 @@ public class Controller {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/vehicle")
-    public ResponseEntity<List<LocationForUIDto>> getVehicleInfo() {
-        // For demonstration, creating a sample uiDTO object with dummy data
-        LocationForUIDto dto = new LocationForUIDto();
-        dto.setId("12345");
-        dto.setLatitude(47.47581);
-        dto.setLongitude(19.05749);
-        dto.setNotifications("3 vehicles in range");
-        List<LocationForUIDto> locationForUIDtoList = new ArrayList<>();
-        locationForUIDtoList.add(dto);
-        return ResponseEntity.ok(locationForUIDtoList);
+    @GetMapping("/vehicles/refresh")
+    public Void sendFullTable() {
+        listeningService.getTheLatestRecords();
+        return null;
     }
 
 }

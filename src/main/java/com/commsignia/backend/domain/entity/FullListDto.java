@@ -1,5 +1,8 @@
 package com.commsignia.backend.domain.entity;
 
+import lombok.Data;
+
+@Data
 public class FullListDto {
     private String id;
 

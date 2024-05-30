@@ -1,13 +1,17 @@
 package com.commsignia.backend.service;
 
 import com.commsignia.backend.domain.DomainService;
+import com.commsignia.backend.domain.entity.FullListDto;
 import com.commsignia.backend.domain.entity.VehicleWithLatestPositionDTO;
+import com.commsignia.backend.service.pojo.ListOfTableElementsDto;
 import com.commsignia.backend.service.pojo.ListenerLocation;
 import com.commsignia.backend.service.pojo.ListenerNotification;
 import com.commsignia.backend.service.pojo.ListenerVehicle;
 import com.commsignia.backend.service.pojo.LocationForUIDto;
+import com.commsignia.backend.service.pojo.TableDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -58,6 +62,7 @@ public class ListeningService {
 
     public String newVehicle() {
         log.info("register POST at service level");
+        getTheLatestRecords();
         return domainService.createNewVehicle();
     }
 
@@ -97,5 +102,26 @@ public class ListeningService {
         return client.post()
                 .uri("/vehicles/update")
                 .bodyValue(location).retrieve().bodyToMono(String.class);
+    }
+
+    public void getTheLatestRecords () {
+        List<FullListDto>filterDtos = domainService.getLatestList();
+        ListOfTableElementsDto dto = new ListOfTableElementsDto();
+        List<TableDto> dtos = new ArrayList<>();
+        for (FullListDto f : filterDtos) {
+            TableDto d = new TableDto();
+            d.setId(f.getId());
+            d.setLongitude(f.getLongitude());
+            d.setLatitude(f.getLatitude());
+            d.setMessage(f.getMessage());
+            dtos.add(d);
+        }
+        dto.setTableDtos(dtos);
+        sendFullTable(dto);
+    }
+    public Mono<Void> sendFullTable(ListOfTableElementsDto dto) {
+        WebClient client = WebClient.create();
+
+        return (Mono<Void>) client.method(HttpMethod.GET).uri("/vehicles/refresh").bodyValue(dto);
     }
 }
