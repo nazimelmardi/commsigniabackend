@@ -23,13 +23,17 @@ import java.util.List;
 public class ListeningService {
 
     private final DomainService domainService;
+    private final WebClient webClient;
+
 
 
 
 
     @Autowired
-    public ListeningService (DomainService domainService, WebClient webClient) {
+    public ListeningService (DomainService domainService, WebClient.Builder webClientBuilder) {
         this.domainService = domainService;
+        this.webClient = webClientBuilder.build();
+
     }
 
     public List<ListenerVehicle> get (Double lat, Double lon, Double rad) {
@@ -38,6 +42,7 @@ public class ListeningService {
         List<VehicleWithLatestPositionDTO> unfiteredDtoList = domainService.getListofVehiclesFilteredByLatestPosition();
         log.info("the domain service was successful, now the mapper comes at service level in GET");
         for (VehicleWithLatestPositionDTO dto : unfiteredDtoList) {
+            log.info("Processing DTO: {}", dto);
             if (isWithinRange(dto.getLatestLatitude(), dto.getLatestLongitude(), lat, lon, rad)) {
                 ListenerVehicle vehicle = new ListenerVehicle();
                 vehicle.setId(dto.getVehicleId());
@@ -46,7 +51,7 @@ public class ListeningService {
                 listenerVehicleList.add(vehicle);
             }
         }
-
+        log.info("Returning listenerVehicleList: {}", listenerVehicleList);
         return listenerVehicleList;
     }
 
@@ -73,10 +78,10 @@ public class ListeningService {
     }
 
     private boolean isWithinRange(double latitude, double longitude, Double lat, Double lon, Double rad) {
-        double earthRadius =  6373000.0; // Earth radius in meters
+        double earthRadius =  6373.0; // Earth radius in km
         double dLat = Math.toRadians(latitude - lat);
         double dLon = Math.toRadians(longitude - lon);
-        double lat1 = Math.toRadians(latitude);
+        double lat1 = Math.toRadians(lat);
         double lat2 = Math.toRadians(latitude);
 
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -84,24 +89,26 @@ public class ListeningService {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
         double distance = earthRadius * c;
+        log.info("Calculated distance: {} for vehicle at lat: {}, lon: {}", distance, latitude, longitude);
+
         return distance <= rad;
     }
 
 
     public Mono<String> sendNotification(ListenerNotification notification) {
-        WebClient client = WebClient.create();
-
-        return client.post()
-                .uri("/notificatictions/ui")
-                .bodyValue(notification).retrieve().bodyToMono(String.class);
+        return webClient.post()
+                .uri("/notifications/ui")
+                .bodyValue(notification)
+                .retrieve()
+                .bodyToMono(String.class);
     }
 
     public Mono<String> sendUpdateLocation(LocationForUIDto location) {
-        WebClient client = WebClient.create();
-
-        return client.post()
+        return webClient.post()
                 .uri("/vehicles/update")
-                .bodyValue(location).retrieve().bodyToMono(String.class);
+                .bodyValue(location)
+                .retrieve()
+                .bodyToMono(String.class);
     }
 
     public void getTheLatestRecords () {
@@ -120,8 +127,7 @@ public class ListeningService {
         sendFullTable(dto);
     }
     public Mono<Void> sendFullTable(ListOfTableElementsDto dto) {
-        WebClient client = WebClient.create();
 
-        return (Mono<Void>) client.method(HttpMethod.GET).uri("/vehicles/refresh").bodyValue(dto);
+        return (Mono<Void>) webClient.method(HttpMethod.GET).uri("/vehicles/refresh").bodyValue(dto);
     }
 }
