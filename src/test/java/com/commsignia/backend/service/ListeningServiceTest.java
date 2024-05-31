@@ -2,25 +2,17 @@ package com.commsignia.backend.service;
 
 import com.commsignia.backend.domain.DomainService;
 import com.commsignia.backend.domain.entity.VehicleWithLatestPositionDTO;
-import com.commsignia.backend.service.pojo.ListenerNotification;
 import com.commsignia.backend.service.pojo.ListenerVehicle;
-import com.commsignia.backend.service.pojo.LocationForUIDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClient.RequestBodyUriSpec;
-import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
-import org.springframework.web.reactive.function.client.WebClient.RequestHeadersSpec;
-import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
-import reactor.core.publisher.Mono;
+
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class ListeningServiceTest {
@@ -28,76 +20,13 @@ class ListeningServiceTest {
     @Mock
     private DomainService domainService;
 
-    @Mock
-    private WebClient.Builder webClientBuilder;
-
-    @Mock
-    private WebClient webClient;
-
-    @Mock
-    private RequestBodyUriSpec requestBodyUriSpec;
-
-    @Mock
-    private RequestBodySpec requestBodySpec;
-
-    @Mock
-    private RequestHeadersSpec<?> requestHeadersSpec;
-
-    @Mock
-    private ResponseSpec responseSpec;
 
     private ListeningService listeningService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        when(webClientBuilder.build()).thenReturn(webClient);
-        listeningService = new ListeningService(domainService, webClientBuilder);
-    }
-
-    @Test
-    void testSendNotification() {
-        ListenerNotification notification = new ListenerNotification();
-
-        when(webClient.post()).thenReturn(requestBodyUriSpec);
-        when(requestBodyUriSpec.uri(eq("/notifications/ui"))).thenReturn(requestBodySpec);
-        when(requestBodySpec.bodyValue(eq(notification))).thenReturn((RequestHeadersSpec) requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just("Notification Sent"));
-
-        Mono<String> result = listeningService.sendNotification(notification);
-
-        verify(webClient).post();
-        verify(requestBodyUriSpec).uri(eq("/notifications/ui"));
-        verify(requestBodySpec).bodyValue(eq(notification));
-        verify(requestHeadersSpec).retrieve();
-        verify(responseSpec).bodyToMono(String.class);
-
-        assertEquals("Notification Sent", result.block());
-    }
-
-    @Test
-    void testSendUpdateLocation() {
-        LocationForUIDto location = new LocationForUIDto();
-        location.setId("1");
-        location.setLatitude(12.34);
-        location.setLongitude(56.78);
-
-        when(webClient.post()).thenReturn(requestBodyUriSpec);
-        when(requestBodyUriSpec.uri(eq("/vehicles/update"))).thenReturn(requestBodySpec);
-        when(requestBodySpec.bodyValue(eq(location))).thenReturn((RequestHeadersSpec) requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just("Location Updated"));
-
-        Mono<String> result = listeningService.sendUpdateLocation(location);
-
-        verify(webClient).post();
-        verify(requestBodyUriSpec).uri(eq("/vehicles/update"));
-        verify(requestBodySpec).bodyValue(eq(location));
-        verify(requestHeadersSpec).retrieve();
-        verify(responseSpec).bodyToMono(String.class);
-
-        assertEquals("Location Updated", result.block());
+        listeningService = new ListeningService(domainService);
     }
 
     @Test

@@ -11,10 +11,7 @@ import com.commsignia.backend.service.pojo.LocationForUIDto;
 import com.commsignia.backend.service.pojo.TableDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,16 +20,10 @@ import java.util.List;
 public class ListeningService {
 
     private final DomainService domainService;
-    private final WebClient webClient;
-
-
-
-
 
     @Autowired
-    public ListeningService (DomainService domainService, WebClient.Builder webClientBuilder) {
+    public ListeningService (DomainService domainService) {
         this.domainService = domainService;
-        this.webClient = webClientBuilder.build();
 
     }
 
@@ -62,7 +53,6 @@ public class ListeningService {
         ui.setId(id);
         ui.setLongitude(location.getLongitude());
         ui.setLatitude(location.getLongitude());
-        sendUpdateLocation(ui);
     }
 
     public String newVehicle() {
@@ -74,7 +64,6 @@ public class ListeningService {
     public void newNotification(ListenerNotification notification) {
         log.info("new notification POST at service level");
         domainService.createNewNotification(notification);
-        sendNotification(notification);
     }
 
     private boolean isWithinRange(double latitude, double longitude, Double lat, Double lon, Double rad) {
@@ -94,23 +83,6 @@ public class ListeningService {
         return distance <= rad;
     }
 
-
-    public Mono<String> sendNotification(ListenerNotification notification) {
-        return webClient.post()
-                .uri("/notifications/ui")
-                .bodyValue(notification)
-                .retrieve()
-                .bodyToMono(String.class);
-    }
-
-    public Mono<String> sendUpdateLocation(LocationForUIDto location) {
-        return webClient.post()
-                .uri("/vehicles/update")
-                .bodyValue(location)
-                .retrieve()
-                .bodyToMono(String.class);
-    }
-
     public void getTheLatestRecords () {
         List<FullListDto>filterDtos = domainService.getLatestList();
         ListOfTableElementsDto dto = new ListOfTableElementsDto();
@@ -124,10 +96,5 @@ public class ListeningService {
             dtos.add(d);
         }
         dto.setTableDtos(dtos);
-        sendFullTable(dto);
-    }
-    public Mono<Void> sendFullTable(ListOfTableElementsDto dto) {
-
-        return (Mono<Void>) webClient.method(HttpMethod.GET).uri("/vehicles/refresh").bodyValue(dto);
     }
 }
